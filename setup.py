@@ -1,11 +1,14 @@
 import setuptools
 
+from aiohttp_extracts import __version__
+
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="aiohttp-extracts",
-    version="0.0.1a1",
+    version=__version__,
     author="jorektheglitch",
     author_email="jorektheglitch@yandex.ru",
     description="Sugar library for aiohttp handlers",

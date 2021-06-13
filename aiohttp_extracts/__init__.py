@@ -9,6 +9,8 @@ from typing import Optional, Union, Any
 from aiohttp import web
 
 
+__version__ = "0.0.1a1"
+
 AsyncFunc = Handler = Callable[..., Awaitable[web.Response]]
 FunctionParams = Dict[str, Tuple[type, Optional[Any]]]
 JSON = Union[dict, list, bool, int, float, str]
