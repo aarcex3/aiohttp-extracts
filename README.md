@@ -53,19 +53,6 @@ Installation process as simple as:
 
 ## Usage
 
-First we need to set a middleware to app.
-
-```python3
-from aiohttp import web
-from aioservertiming import server_timing_mware
-
-app = web.Applicalion(
-    middlewares = [
-        server_timing_mware
-    ]
-)
-```
-
 ### Usual handler
 
 ```python3
@@ -139,4 +126,4 @@ class ChatView(web.View, metaclass=ExtractionMeta):
 
 ## Links
 
-This library on [PyPI](https://pypi.org/project/aioservertiming/)
+This library on [PyPI](https://pypi.org/project/aiohttp_extracts/)
