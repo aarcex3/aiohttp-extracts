@@ -2,9 +2,9 @@ from abc import ABCMeta, abstractclassmethod
 from functools import wraps
 import inspect
 
-from typing import Tuple, Dict
-from typing import Callable, Awaitable, Iterable
-from typing import Optional, Union, Any
+from typing import Dict, Tuple
+from typing import Awaitable, Callable, Iterable
+from typing import Any, Optional, Union
 
 from aiohttp import web
 
@@ -48,7 +48,7 @@ def fetch_fn_params(
     return fn_params
 
 
-def extraction_wrapper(fn: Handler, classview=False) -> AsyncFunc:
+def extraction_wrapper(fn: Handler, classview: bool = False) -> AsyncFunc:
     """
     """
 
@@ -88,7 +88,7 @@ def extract_classview(cls: web.View) -> web.View:
     return cls
 
 
-def with_extraction(handler=None, classview=False):
+def with_extraction(handler: Optional[Handler] = None, classview: bool = False):
     """
     """
 
@@ -113,7 +113,7 @@ class ParameterMeta(ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def __getitem__(cls, key):
+    def __getitem__(cls, key: Union[str, type, Iterable]) -> dict:
         default_attrs = {name: None for name in ('name', 'type')}
         default_attrs.update(cls.__parse_key__(key))
         return type(cls.__name__, (cls, ), default_attrs)
