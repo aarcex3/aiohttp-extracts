@@ -36,12 +36,11 @@ routes = web.RouteTableDef()
 
 
 @routes.get(r'/chats/{chat_id:(\d+)}/')
-async def handler(request: web.Request):
+async def handler(request: web.Request) -> web.Response:
     user = request.get('user')
     chat = request.match_info.get('chat_id')
     offset = request.query.get('offset', 0)
     count = request.query.get('count', 100)
-) -> web.Response:
     ...
 ```
 
