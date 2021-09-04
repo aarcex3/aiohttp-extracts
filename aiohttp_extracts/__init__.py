@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractclassmethod
+from abc import ABCMeta, abstractmethod
 from functools import wraps
 import inspect
 
@@ -131,7 +131,8 @@ class Parameter(metaclass=ParameterMeta):
         self.name = name
         self.type = type
 
-    @abstractclassmethod
+    @abstractmethod
+    @classmethod
     async def extract(name: str, request: web.Request):
         """
         """
