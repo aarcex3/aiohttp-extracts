@@ -37,7 +37,7 @@ class Parameter(ABC, metaclass=ParameterMeta):
 
     @classmethod
     @abstractmethod
-    async def extract(cls, name: str, request: web.Request) -> Any:
+    async def extract(cls, request: web.Request, name: Optional[str] = None) -> Any:
         """
         Abstract class method to extract data from a request.
         This method should be implemented by subclasses.
@@ -68,14 +68,15 @@ class Parameter(ABC, metaclass=ParameterMeta):
 class Header(Parameter):
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Optional[str]:
-        if cls.name:
-            name = cls.name
         name = (
             name.capitalize()
             if len(name) == 1
             else "-".join(word.capitalize() for word in name.split("_"))
         )
-        return request.headers.get(name)
+        value = request.headers.get(name)
+        if value is None:
+            raise web.HTTPBadRequest(reason=f"Missing header '{name}'.")
+        return value
 
 
 class Cookie(Parameter):

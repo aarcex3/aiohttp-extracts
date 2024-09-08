@@ -7,7 +7,7 @@ from aiohttp import web
 from .parameters import Parameter
 
 AsyncFunc = Callable[..., Awaitable[web.Response]]
-FunctionParams = Dict[str, Tuple[Union[web.Request, Parameter, type], Optional[Any]]]
+FunctionParams = Dict[str, Tuple[Union[web.Request, Parameter, Type], Optional[Any]]]
 
 
 def fetch_fn_params(fn: Callable) -> FunctionParams:
@@ -24,13 +24,8 @@ def fetch_fn_params(fn: Callable) -> FunctionParams:
             raise ValueError(
                 "Parameter {} of function {} has no type hint".format(param_name, fn)
             )
-        if not issubclass(annotation, (Parameter, web.Request)):
-            raise TypeError(
-                "{} type hints must be subclass of {}" "which {} is not".format(
-                    fn.__name__, Parameter, annotation
-                )
-            )
         fn_params[param.name] = (annotation, default)
+
     return fn_params
 
 
@@ -45,12 +40,24 @@ def extraction_wrapper(fn: AsyncFunc, classview: bool = False) -> AsyncFunc:
             args.append(request_or_view)
         else:
             request = request_or_view
+
         params = {}
-        for name, (type, default) in fn_params.items():
-            if issubclass(type, web.Request):  # type: ignore
-                params[name] = request
-            else:
-                params[name] = await type.extract(name, request) or default  # type: ignore
+        for name, (param_type, default) in fn_params.items():
+            try:
+                if isinstance(param_type, Type) and issubclass(param_type, web.Request):
+                    params[name] = request
+                elif isinstance(param_type, Type) and issubclass(param_type, Parameter):
+
+                    params[name] = (
+                        await param_type.extract(name=name, request=request) or default
+                    )
+                else:
+                    path_params = request.match_info
+                    params[name] = path_params.get(name, default)
+            except Exception as e:
+                print(f"Error extracting parameter '{name}': {e}")
+                params[name] = default
+            print(params)
         return await fn(*args, **params)
 
     return wrapped
