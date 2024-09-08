@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "aiohttp-extracts"
+version = "0.1.0"
+description = ""
+authors = ["Agustin Arce <agustinarceprincich@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aiohttp = "^3.10.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

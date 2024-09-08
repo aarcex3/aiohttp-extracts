@@ -6,6 +6,7 @@ It uses type hints to determine where each value must be extracted from.
 ## For example
 
 With aiohttp-extracts:
+
 ```python3
 from aiohttp import web
 from aiohttp_extracts import with_extraction
@@ -27,6 +28,7 @@ async def handler(
 ```
 
 Without aiohttp-extracts:
+
 ```python3
 from aiohttp import web
 from aiohttp_extracts import with_extraction
@@ -48,7 +50,7 @@ async def handler(request: web.Request) -> web.Response:
 
 Installation process as simple as:
 
-    $ pip install aiohttp-extracts
+    pip install aiohttp-extracts
 
 ## Usage
 
