@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from token import OP
-from typing import Any, Dict, Iterable, Optional, Type, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Type, Union
 
-from aiohttp import web
-from multidict import MultiMapping
+from aiohttp import BodyPartReader, MultipartReader, web
+from aiohttp.web_exceptions import HTTPException
+from multidict import CIMultiDictProxy
 
 
 class ParameterMeta(ABCMeta):
@@ -66,7 +66,6 @@ class Parameter(ABC, metaclass=ParameterMeta):
 
 
 class Header(Parameter):
-
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Optional[str]:
         if cls.name:
@@ -82,7 +81,8 @@ class Header(Parameter):
 class Cookie(Parameter):
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Optional[str]:
-        name = cls.name or name
+        if cls.name:
+            name = cls.name
         return request.cookies.get(name)
 
 
@@ -92,18 +92,19 @@ class JSONBody(Parameter):
         return await request.json()
 
 
-class MatchInfo(Parameter):
+class Path(Parameter):
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Optional[str]:
-        name = cls.name or name
+        if cls.name:
+            name = cls.name
         return request.match_info.get(name)
 
 
 class Query(Parameter):
-
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Any:
-        name = cls.name or name
+        if cls.name:
+            name = cls.name
         value = request.query.get(name)
 
         if value is None:
@@ -124,33 +125,46 @@ class RequestAttr(Parameter):
 
     @classmethod
     async def extract(cls, name: str, request: web.Request) -> Any:
-        name = cls.name or name
+        if cls.name:
+            name = cls.name
         return request.get(name, None)
 
 
 class File(Parameter):
     def __init__(
-        self, name: str, filename: str, content: bytes, headers: MultiMapping[str]
+        self,
+        name: str,
+        filename: Optional[str],
+        content: bytes,
+        headers: Union[Mapping[str, str], CIMultiDictProxy[str]],
     ):
-        self.name = name
+        super().__init__(name=name)
         self.filename = filename
         self.content = content
         self.headers = headers
 
     @classmethod
-    async def extract(cls, request: web.Request, name: str) -> Optional[File]:
-        if cls.name:
-            name = cls.name
-        reader = await request.multipart()
+    async def extract(cls, request: web.Request, name: str) -> Optional["File"]:
+        try:
+            if cls.name:
+                name = cls.name
 
-        async for part in reader:
-            if part.name == name:  # type: ignore
-                filename = part.filename  # type: ignore
-                content = await part.read(decode=True)  # type: ignore
-                headers = part.headers  # type: ignore
+            reader: MultipartReader = await request.multipart()
 
-                return cls(
-                    name=name, filename=filename, content=content, headers=headers  # type: ignore
-                )
+            async for part in reader:
+                if isinstance(part, BodyPartReader):
+                    if getattr(part, "name", None) == name:
+                        filename = getattr(part, "filename", None)
+                        content = await part.read(decode=True)
+                        headers = getattr(part, "headers", {})
+
+                        return cls(
+                            name=name,
+                            filename=filename,
+                            content=content,
+                            headers=headers,
+                        )
+        except Exception as e:
+            raise HTTPException(text=f"{e}") from e
 
         return None

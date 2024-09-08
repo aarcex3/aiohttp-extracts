@@ -20,7 +20,6 @@ class ParameterMeta(ABCMeta):
         super().__init__(*args, **kwargs)
 
     def __getitem__(cls, key: Union[str, type, Iterable]) -> "type":
-
         default_attrs: Dict[str, Any] = {"name": None, "type": None}
         default_attrs.update(cls.__parse_key__(key))
 

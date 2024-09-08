@@ -263,4 +263,6 @@ Thumbs.db
 
 *.pypirc
 
-TODO
+.vscode/
+vscode/
+.ruff_cache/

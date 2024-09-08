@@ -1,13 +1,13 @@
 import inspect
 from functools import wraps
-from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Type, Union
 
 from aiohttp import web
 
 from .parameters import Parameter
 
 AsyncFunc = Callable[..., Awaitable[web.Response]]
-FunctionParams = Dict[str, Tuple[type, Optional[Any]]]
+FunctionParams = Dict[str, Tuple[Union[web.Request, Parameter, type], Optional[Any]]]
 
 
 def fetch_fn_params(fn: Callable) -> FunctionParams:
@@ -26,15 +26,16 @@ def fetch_fn_params(fn: Callable) -> FunctionParams:
             )
         if not issubclass(annotation, (Parameter, web.Request)):
             raise TypeError(
-                "{} type hints must be subclass of {}"
-                "which {} is not".format(fn.__name__, Parameter, annotation)
+                "{} type hints must be subclass of {}" "which {} is not".format(
+                    fn.__name__, Parameter, annotation
+                )
             )
         fn_params[param.name] = (annotation, default)
     return fn_params
 
 
 def extraction_wrapper(fn: AsyncFunc, classview: bool = False) -> AsyncFunc:
-    fn_params = fetch_fn_params(fn)
+    fn_params: FunctionParams = fetch_fn_params(fn)
 
     @wraps(fn)
     async def wrapped(request_or_view: Union[web.Request, web.View]) -> web.Response:
@@ -46,10 +47,10 @@ def extraction_wrapper(fn: AsyncFunc, classview: bool = False) -> AsyncFunc:
             request = request_or_view
         params = {}
         for name, (type, default) in fn_params.items():
-            if issubclass(type, web.Request):
+            if issubclass(type, web.Request):  # type: ignore
                 params[name] = request
             else:
-                params[name] = await type.extract(name, request) or default
+                params[name] = await type.extract(name, request) or default  # type: ignore
         return await fn(*args, **params)
 
     return wrapped
