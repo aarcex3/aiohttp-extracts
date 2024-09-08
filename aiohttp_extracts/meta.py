@@ -3,17 +3,6 @@ from typing import Any, Dict, Iterable, Union
 
 from aiohttp import web
 
-from .wrappers import extract_classview
-
-
-class ExtractionMeta(ABCMeta):
-    def __init__(self, name, bases, dct):
-        super().__init__(name, bases, dct)
-        if issubclass(self, web.View):
-            extract_classview(self)
-        else:
-            raise TypeError(f"{name} must be a subclass of aiohttp.web.View")
-
 
 class ParameterMeta(ABCMeta):
     def __init__(self, *args, **kwargs):

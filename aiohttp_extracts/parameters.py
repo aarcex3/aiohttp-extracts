@@ -1,43 +1,30 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Any, Dict, Iterable, Mapping, Optional, Type, Union
+from typing import Any, Dict, Generic, Iterable, Mapping, Optional, Type, TypeVar, Union
 
 from aiohttp import BodyPartReader, MultipartReader, web
 from aiohttp.web_exceptions import HTTPException
 from multidict import CIMultiDictProxy
 
+from aiohttp_extracts.meta import ParameterMeta
 
-class ParameterMeta(ABCMeta):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, key: Union[str, type, Iterable]) -> Dict[str, Any]:
-        return self.__parse_key__(key)
-
-    @staticmethod
-    def __parse_key__(key: Union[str, type, Iterable]) -> Dict[str, Any]:
-        params: Dict[str, Any] = {}
-        if isinstance(key, str):
-            params["name"] = key
-        elif isinstance(key, type):
-            params["type"] = key
-        elif isinstance(key, Iterable):
-            params.update({k: v for k, v in zip(("name", "type"), key)})
-        return params
+T = TypeVar("T")
 
 
-class Parameter(ABC, metaclass=ParameterMeta):
+class Parameter(ABC, Generic[T], metaclass=ParameterMeta):
     name: Optional[str]
-    type: Optional[Type]
+    type: Optional[Type[T]]
 
-    def __init__(self, name: Optional[str] = None, type: Optional[Type] = None) -> None:
+    def __init__(
+        self, name: Optional[str] = None, type: Optional[Type[T]] = None
+    ) -> None:
         self.name = name
         self.type = type
 
     @classmethod
     @abstractmethod
-    async def extract(cls, request: web.Request, name: Optional[str] = None) -> Any:
+    async def extract(cls, request: web.Request, name: Optional[str] = None) -> T:
         """
         Abstract class method to extract data from a request.
         This method should be implemented by subclasses.
@@ -65,9 +52,9 @@ class Parameter(ABC, metaclass=ParameterMeta):
         )
 
 
-class Header(Parameter):
+class Header(Parameter[str]):
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Optional[str]:
+    async def extract(cls, request: web.Request, name: Optional[str] = None) -> str:
         name = (
             name.capitalize()
             if len(name) == 1
@@ -79,40 +66,44 @@ class Header(Parameter):
         return value
 
 
-class Cookie(Parameter):
+class Cookie(Parameter[str]):
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Optional[str]:
+    async def extract(
+        cls, request: web.Request, name: Optional[str] = None
+    ) -> Optional[str]:
         if cls.name:
             name = cls.name
         return request.cookies.get(name)
 
 
-class JSONBody(Parameter):
+class JSONBody(Parameter[Dict[str, Any]]):
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Any:
+    async def extract(
+        cls, request: web.Request, name: Optional[str] = None
+    ) -> Dict[str, Any]:
         return await request.json()
 
 
-class Path(Parameter):
+class Path(Parameter[str]):
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Optional[str]:
+    async def extract(
+        cls, request: web.Request, name: Optional[str] = None
+    ) -> Optional[str]:
         if cls.name:
             name = cls.name
         return request.match_info.get(name)
 
 
-class Query(Parameter):
+class Query(Parameter[str]):
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Any:
-        if cls.name:
-            name = cls.name
+    async def extract(cls, request: web.Request, name: Optional[str] = None) -> T:
         value = request.query.get(name)
 
         if value is None:
             raise web.HTTPBadRequest(reason=f"Missing query parameter '{name}'.")
         if cls.type:
             try:
-                return cls.type(value)
+                return cls.type(value)  # Type conversion
             except (ValueError, TypeError):
                 raise web.HTTPBadRequest(
                     reason=f"Invalid type for query parameter '{name}'. Expected {cls.type.__name__}."
@@ -121,17 +112,17 @@ class Query(Parameter):
         return value
 
 
-class RequestAttr(Parameter):
+class RequestAttr(Parameter[Any]):
     name: Optional[str] = None
 
     @classmethod
-    async def extract(cls, name: str, request: web.Request) -> Any:
+    async def extract(cls, request: web.Request, name: Optional[str] = None) -> Any:
         if cls.name:
             name = cls.name
         return request.get(name, None)
 
 
-class File(Parameter):
+class File(Parameter[bytes]):
     def __init__(
         self,
         name: str,
@@ -139,13 +130,15 @@ class File(Parameter):
         content: bytes,
         headers: Union[Mapping[str, str], CIMultiDictProxy[str]],
     ):
-        super().__init__(name=name)
+        super().__init__(name=name, type=bytes)
         self.filename = filename
         self.content = content
         self.headers = headers
 
     @classmethod
-    async def extract(cls, request: web.Request, name: str) -> Optional["File"]:
+    async def extract(
+        cls, request: web.Request, name: Optional[str] = None
+    ) -> Optional["File"]:
         try:
             if cls.name:
                 name = cls.name

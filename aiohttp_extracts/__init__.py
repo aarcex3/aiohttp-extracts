@@ -1,5 +1,5 @@
 from .parameters import Cookie, File, Header, JSONBody, Path, Query, RequestAttr
-from .wrappers import extract_classview, with_extraction
+from .wrappers import with_extraction
 
 __version__ = "0.0.1a1"
 
@@ -12,6 +12,5 @@ __all__ = [
     "Query",
     "RequestAttr",
     "File",
-    "extract_classview",
     "with_extraction",
 ]
