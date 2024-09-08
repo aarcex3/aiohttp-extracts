@@ -76,12 +76,15 @@ class Cookie(Parameter[str]):
         return request.cookies.get(name)
 
 
-class JSONBody(Parameter[Dict[str, Any]]):
+class ReqBody(Parameter[Dict[str, Any]]):
     @classmethod
     async def extract(
         cls, request: web.Request, name: Optional[str] = None
     ) -> Dict[str, Any]:
-        return await request.json()
+        if request.can_read_body:
+            return await request.json()
+        else:
+            raise web.HTTPBadRequest(reason="Request body is missing.")
 
 
 class Path(Parameter[str]):
