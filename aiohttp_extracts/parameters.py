@@ -92,9 +92,19 @@ class Path(Parameter[str]):
     async def extract(
         cls, request: web.Request, name: Optional[str] = None
     ) -> Optional[str]:
-        if cls.name:
-            name = cls.name
-        return request.match_info.get(name)
+        value = request.match_info.get(name)
+
+        if value is None:
+            raise web.HTTPBadRequest(reason=f"Missing query parameter '{name}'.")
+        if cls.type:
+            try:
+                return cls.type(value)
+            except (ValueError, TypeError):
+                raise web.HTTPBadRequest(
+                    reason=f"Invalid type for query parameter '{name}'. Expected {cls.type.__name__}."
+                )
+
+        return value
 
 
 class Query(Parameter[str]):
@@ -106,7 +116,7 @@ class Query(Parameter[str]):
             raise web.HTTPBadRequest(reason=f"Missing query parameter '{name}'.")
         if cls.type:
             try:
-                return cls.type(value)  # Type conversion
+                return cls.type(value)
             except (ValueError, TypeError):
                 raise web.HTTPBadRequest(
                     reason=f"Invalid type for query parameter '{name}'. Expected {cls.type.__name__}."
