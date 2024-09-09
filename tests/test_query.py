@@ -7,9 +7,7 @@ from aiohttp_extracts.wrappers import with_extraction
 
 
 @with_extraction
-async def get_query_with_defaults(
-    a: Query[int] = 5, b: Query[int] = 10
-) -> web.Response:
+async def get_query_with_defaults(a: Query[int], b: Query[int] = 10) -> web.Response:
     return web.json_response({"result": a + b})
 
 
