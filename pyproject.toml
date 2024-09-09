@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aiohttp-extracts"
 version = "0.1.0"
-description = ""
+description = "Sugar library for aiohttp handlers, Fork of the original project"
 authors = ["Agustin Arce <agustinarceprincich@gmail.com>"]
 readme = "README.md"
 
