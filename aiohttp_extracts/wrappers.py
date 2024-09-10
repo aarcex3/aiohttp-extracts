@@ -47,9 +47,6 @@ async def handle_request(
                     await param_type.extract(name=name, request=request) or default
                 )
 
-            else:
-                kwargs[name] = kwargs.get(name, default)
-
         return await func(*args, **kwargs)
 
     return wrapper
