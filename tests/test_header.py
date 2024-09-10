@@ -9,7 +9,7 @@ from aiohttp_extracts.wrappers import with_extraction
 
 
 @with_extraction
-async def get_header(x_custom: Header) -> web.Response:
+async def get_header(x_custom: Header["X-Custom"]) -> web.Response:
     return web.json_response({"x_custom": x_custom})
 
 
