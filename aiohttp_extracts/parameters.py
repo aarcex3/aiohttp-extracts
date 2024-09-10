@@ -71,8 +71,6 @@ class Cookie(Parameter[str]):
     async def extract(
         cls, request: web.Request, name: Optional[str] = None
     ) -> Optional[str]:
-        if cls.name:
-            name = cls.name
         return request.cookies.get(name)
 
 

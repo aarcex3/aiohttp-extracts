@@ -7,23 +7,23 @@ FIND := find
 # Directories
 SRC_DIR := ./aiohttp_extracts
 TEST_DIR := ./tests
+COVERAGE_DIR := ./coverage
 
 # Targets
-.PHONY: clean test run
+.PHONY: clean test run format coverage
 
 
-
-#Format the files
 format:
 	$(RUFF) $(SRC_DIR)
 
-# Clean target to delete __pycache__ directories
+
 clean:
 	$(FIND) . -type d -name "__pycache__" -exec rm -rf {} +
+	-rm -rf $(COVERAGE_DIR)
 
-# Test target to run pytest with specified options
 test:
 	$(PYTEST) $(TEST_DIR) -vv -s --showlocals
 
 coverage:
-	$(PYTEST) $(TEST_DIR) --cov --cov-report=html:coverage
+	-rm -rf $(COVERAGE_DIR)
+	$(PYTEST) $(TEST_DIR) --cov=$(SRC_DIR) --cov-report=html:$(COVERAGE_DIR)
