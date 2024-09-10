@@ -115,8 +115,6 @@ class Query(Parameter[str]):
                     reason=f"Invalid type for query parameter '{name}'. Expected {cls.type.__name__}."
                 )
 
-        return value
-
 
 class RequestAttr(Parameter[Any]):
     name: Optional[str] = None
