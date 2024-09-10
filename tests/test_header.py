@@ -28,3 +28,11 @@ async def test_header(client: TestClient):
 
     json_data = await response.json()
     assert json_data["x_custom"] == "test-value"
+
+
+@pytest.mark.asyncio
+async def test_header_missing(client: TestClient):
+    response = await client.get("/header")
+
+    assert response.status == 400
+    assert "Missing header 'X-Custom'" in await response.text()
