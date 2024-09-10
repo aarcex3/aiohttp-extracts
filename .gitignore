@@ -266,3 +266,4 @@ Thumbs.db
 .vscode/
 vscode/
 .ruff_cache/
+coverage/
