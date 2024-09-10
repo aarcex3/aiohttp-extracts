@@ -121,8 +121,6 @@ class RequestAttr(Parameter[Any]):
 
     @classmethod
     async def extract(cls, request: web.Request, name: Optional[str] = None) -> Any:
-        if cls.name:
-            name = cls.name
         return request.get(name, None)
 
 
@@ -144,8 +142,6 @@ class File(Parameter[bytes]):
         cls, request: web.Request, name: Optional[str] = None
     ) -> Optional["File"]:
         try:
-            if cls.name:
-                name = cls.name
 
             reader: MultipartReader = await request.multipart()
 
@@ -164,5 +160,3 @@ class File(Parameter[bytes]):
                         )
         except Exception as e:
             raise HTTPException(text=f"{e}") from e
-
-        return None

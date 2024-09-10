@@ -2,6 +2,7 @@ import io
 
 import pytest
 from aiohttp import web
+from aiohttp.client_exceptions import ClientResponseError
 from pytest_aiohttp.plugin import TestClient
 
 from aiohttp_extracts.parameters import File
@@ -35,3 +36,10 @@ async def test_file(client: TestClient):
     json_data = await response.json()
     assert json_data["filename"] == "test.txt"
     assert json_data["content"] == "This is a test file."
+
+
+@pytest.mark.asyncio
+async def test_file_exception(client: TestClient):
+
+    with pytest.raises(ClientResponseError) as ex:
+        response = await client.post("/file")
