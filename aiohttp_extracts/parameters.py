@@ -13,14 +13,14 @@ T = TypeVar("T")
 
 
 class Parameter(ABC, Generic[T], metaclass=ParameterMeta):
-    name: Optional[str]
+    name: Optional[Type[str]]
     type: Optional[Type[T]]
 
     def __init__(
         self, name: Optional[str] = None, type: Optional[Type[T]] = None
     ) -> None:
-        self.name = name
-        self.type = type
+        self.name: str = name
+        self.type: Type[T] = type
 
     @classmethod
     @abstractmethod
@@ -29,20 +29,20 @@ class Parameter(ABC, Generic[T], metaclass=ParameterMeta):
         Abstract class method to extract data from a request.
         This method should be implemented by subclasses.
         """
-        pass
 
     @staticmethod
-    def __parse_key(key: Union[str, type, Iterable]) -> Dict[str, Any]:
+    def __parse_key__(key: Union[str, type, Iterable]) -> Dict[str, Any]:
         """
         Parses the key to determine the name and type attributes.
         This is a static method as it doesn't rely on instance or class-level data.
         """
         params: Dict[str, Any] = {}
+
         if isinstance(key, str):
             params["name"] = key
-        elif isinstance(key, type):
+        if isinstance(key, type):
             params["type"] = key
-        elif isinstance(key, Iterable):
+        if isinstance(key, Iterable):
             params.update({k: v for k, v in zip(("name", "type"), key)})
         return params
 
@@ -142,7 +142,6 @@ class File(Parameter[bytes]):
         cls, request: web.Request, name: Optional[str] = None
     ) -> Optional["File"]:
         try:
-
             reader: MultipartReader = await request.multipart()
 
             async for part in reader:

@@ -15,6 +15,7 @@ COVERAGE_DIR := ./coverage
 
 format:
 	$(RUFF) $(SRC_DIR)
+	$(RUFF) $(TEST_DIR)
 
 
 clean:

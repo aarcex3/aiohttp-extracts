@@ -17,15 +17,15 @@ def fetch_fn_params(fn: Callable) -> FunctionParams:
     fn_params = {}
     params = inspect.signature(fn).parameters
     for param_name, param in params.items():
-        if param_name == "self":
-            continue
+        # if param_name == "self":
+        #     continue
         annotation = param.annotation
         default = param.default
         if default is param.empty:
             default = None
         if annotation is param.empty:
             raise ValueError(
-                f"Parameter {param_name} of function {fn} has no type hint"
+                f"Parameter '{param_name}' of function '{fn.__name__}' has no type hint"
             )
         fn_params[param_name] = (annotation, default)
 
